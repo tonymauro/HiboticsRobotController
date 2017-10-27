@@ -6,47 +6,38 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbManager;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pManager.ActionListener;
+import android.net.wifi.p2p.WifiP2pManager.Channel;
+import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.opengl.GLSurfaceView;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
-import android.hardware.usb.*;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-//import android.widget.ToggleButton;
-import com.vuforia.*;
-//import java.io.FileDescriptor;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
+
+import com.vuforia.Vuforia;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.List;
 
-import android.net.wifi.p2p.WifiP2pManager.Channel;
-import android.net.wifi.p2p.WifiP2pManager.ActionListener;
-import android.net.wifi.p2p.WifiP2pManager.*;
+//import android.widget.ToggleButton;
+//import java.io.FileDescriptor;
 
 public class MainActivity extends AppCompatActivity {
+
 
     UsbAccessory megaADK;
     UsbManager usbManager;
@@ -173,6 +164,9 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
 
+        InitVuforiaTask turtle = new InitVuforiaTask();
+        turtle.mActivity=new Activity();
+
         setContentView(R.layout.activity_main);
 
         usbFilter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -227,12 +221,12 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(usbReceiver,usbFilter);
         //Redifining iS and oS ewould be pointless
         if (iS != null && oS != null){
-            Toast.makeText(context,"is&&os null",Toast.LENGTH_SHORT).show();
+            Toast.makeText(context,"is&&os null", Toast.LENGTH_SHORT).show();
             return;
         }
         //There sohuld only be 1 USB accessory which would be the Mega
         if(usbManager==null){
-            Toast.makeText(context,"usbManager is null",Toast.LENGTH_SHORT).show();
+            Toast.makeText(context,"usbManager is null", Toast.LENGTH_SHORT).show();
             return;
         }
         UsbAccessory accessory = usbManager.getAccessoryList()[0];
@@ -259,9 +253,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onPause() {
         super.onPause();
-        unregisterReceiver(usbReceiver);
-        unregisterReceiver(wifiReceiver);
-        closeAccessory();
+
+        //unregisterReceiver(usbReceiver);
+        //unregisterReceiver(wifiReceiver);
+        //closeAccessory();
     }
 
 
@@ -295,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(int reason){
-                    Toast.makeText(MainActivity.this, "Connect failed",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Connect failed", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -305,10 +300,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void peerDiscovery(View v){
-        wifiManager.discoverPeers(wifiChannel, new ActionListener(){
+        wifiManager.discoverPeers(wifiChannel, new WifiP2pManager.ActionListener(){
             @Override
             public void onSuccess(){
-                Toast.makeText(context,"hello this is successful",Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,"hello this is successful", Toast.LENGTH_SHORT).show();
                 //this is pointless but i have to init this
                 successful = true;
             }
@@ -405,7 +400,7 @@ public class MainActivity extends AppCompatActivity {
         byte[] buffer = {(byte)3, (byte)4};
         if(oS!= null){
             try {
-                Toast.makeText(this,"Clear Display",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,"Clear Display", Toast.LENGTH_SHORT).show();
                 oS.write(buffer);
             }catch (Exception e){
             }
@@ -554,6 +549,13 @@ public class MainActivity extends AppCompatActivity {
 //        }
     }
 
+    public void switchAct(View v){
+        Log.i("switchAct", "Before creating intent and starting");
+        Intent goVuforia = new Intent(this,VuforiaActivity.class);
+        startActivity(goVuforia);
+        Log.i("switchAct", "After");
+    }
+
     public void beginUsb(View v){
         permissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
 
@@ -604,6 +606,7 @@ public class MainActivity extends AppCompatActivity {
                 return (mProgressValue > 0);
             }
         }
+
     }
 
 //
@@ -670,6 +673,4 @@ public class MainActivity extends AppCompatActivity {
     public void resetData(){
 
     }
-
-
 }

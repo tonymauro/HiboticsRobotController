@@ -3,27 +3,26 @@
     package="com.example.apm1.androidrobotcontroller">
 
     <uses-permission
-        android:required="true"
         android:name="android.permission.ACCESS_COARSE_LOCATION"
-        />
+        android:required="true" />
     <uses-permission
-        android:required = "true"
         android:name="android.permission.ACCESS_WIFI_STATE"
-        />
+        android:required="true" />
     <uses-permission
-        android:required="true"
-        android:name="android.permission.CHANGE_WIFI_STATE"/>
+        android:name="android.permission.CHANGE_WIFI_STATE"
+        android:required="true" />
     <uses-permission
-        android:required="true"
-        android:name="android.permission.INTERNET"/>
+        android:name="android.permission.INTERNET"
+        android:required="true" />
     <uses-permission
-        android:required="true"
         android:name="android.permission.CHANGE_NETWORK_STATE"
-        />
+        android:required="true" />
     <uses-permission
-        android:required = "true"
         android:name="android.permission.ACCESS_NETWORK_STATE"
-        />
+        android:required="true" />
+    <uses-permission
+        android:name="android.permission.CAMERA"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -38,15 +37,18 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
-            </intent-filter>
-            <meta-data android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
-                android:resource="@xml/accspecs" />
         </activity>
-        <uses-library android:name="com.android.future.usb.accessory"></uses-library>
+
+        <uses-library android:name="com.android.future.usb.accessory" />
+
+        <activity
+            android:name=".VuforiaActivity"
+            android:label="activity_vuforia"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+
     </application>
 
 </manifest>

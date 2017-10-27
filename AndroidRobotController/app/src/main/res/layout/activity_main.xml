@@ -144,4 +144,13 @@
         android:onClick="Stop"
         android:text="Stop" />
 
+    <Button
+        android:id="@+id/beginVuforia"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/BUB"
+        android:layout_below="@+id/BUB"
+        android:onClick="switchAct"
+        android:text="Button" />
+
 </RelativeLayout>
