@@ -16,7 +16,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 /**
  * Created by WILLIAM LIN on 10/16/2017 for the Android Robot Controller.
- * I COPY PASTED THIS FROM GITHUB
+ * I GOT THIS FROM GITHUB
  * https://github.com/mattrayner/cordova-plugin-vuforia/blob/master/src/android/java/com/mattrayner/vuforia/app/ImageTargetRenderer.java
  */
 
@@ -126,12 +126,8 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer {
              * So, to stop weak matches such as 'two' within ["onetwothree", "two"] we wrap the term in
              * speech marks such as '"two"'
              **/
-            Boolean looking_for = mTargets.toLowerCase().contains("\"" + obj_name.toLowerCase() + "\"");
+            mActivity.imageFound(obj_name);
 
-            if (looking_for)
-            {
-                mActivity.imageFound(obj_name);
-            }
         }
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);

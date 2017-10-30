@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.vuforia.CameraDevice;
 import com.vuforia.DataSet;
@@ -30,8 +31,6 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
     Boolean cameraW;
 
     VuforiaClass vuforiaClass;
-
-    Thread trackerT;
 
     private Boolean eTracking;
 
@@ -77,13 +76,12 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
     }
 
     public void returnMain(View v){
-        trackerT.interrupt();
         Intent returnM = new Intent(this,MainActivity.class);
         startActivity(returnM);
     }
 
     public void imageFound(String string){
-
+        Toast.makeText(this,string + " was found", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -92,22 +90,6 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         if(view!= null){
             view.setVisibility(View.INVISIBLE);
             view.onPause();
-        }
-    }
-
-
-    //THIS THREAD IDEA PROBABLY WON'T WORK, GIVE UP
-
-    public class trackingThread implements Runnable {
-
-        @Override
-        public void run(){
-            if(Thread.interrupted()) return;
-            System.out.println("I want to die");
-        }
-
-        public void setPriority(){
-            android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
         }
     }
 
@@ -130,7 +112,7 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
         dataSet = oTracker.createDataSet();
 
-        if(!dataSet.load("Name goes here", STORAGE_TYPE.STORAGE_APP)) return false;
+        if(!dataSet.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) return false;
 
         if(!oTracker.activateDataSet(dataSet)) return false;
 
@@ -166,7 +148,7 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         if(ot==null) return false;
         if(dataSet == null) dataSet = ot.createDataSet();
         if(dataSet == null) return false;
-        if(!dataSet.load("THIS IS WHERE U PUT STUFF TO LOAD", STORAGE_TYPE.STORAGE_APP)) return false;
+        if(!dataSet.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APP)) return false;
         if(!ot.activateDataSet(dataSet)) return false;
 
         int numTrackables = dataSet.getNumTrackables();
