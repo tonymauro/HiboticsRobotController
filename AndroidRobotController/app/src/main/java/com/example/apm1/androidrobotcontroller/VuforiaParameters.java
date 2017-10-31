@@ -10,7 +10,7 @@ import android.support.annotation.IdRes;
 
 public class VuforiaParameters {
 
-    public String vuforiaLicenseKey = "turtleman";
+    private String vuforiaLicenseKey = "setKey";
 
     public int CameraDirection = -1;
 

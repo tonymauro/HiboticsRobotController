@@ -2,6 +2,7 @@ package com.example.apm1.androidrobotcontroller;
 
 import android.app.Activity;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.vuforia.CameraDevice;
 import com.vuforia.ObjectTracker;
@@ -29,10 +30,14 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
 
     TrackerManager tManager;
 
+    public final Object lifecycleLock = new Object();
+
     public VuforiaClass(VuforiaActInterface vuforiaAct, VuforiaParameters params){
+        Log.i("VUforiaClass", "before initializing");
         this.vuforiaAct = vuforiaAct;
         VParams = params;
-        tManager = TrackerManager.getInstance();
+   //     tManager = TrackerManager.getInstance();
+        Log.i("VUforiaClass", "successfully initialized");
     }
 
     public void initAr(Activity activity){
@@ -53,18 +58,24 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
 
         @Override
         protected Boolean doInBackground(Void... params){
-            Vuforia.setInitParameters(activity,1,VParams.vuforiaLicenseKey);
+            synchronized(lifecycleLock) {
+                Log.i("VuforiaClass", "Before setInitParameters");
 
-            do {
-                mProgressValue = Vuforia.init();
-                publishProgress(mProgressValue);
+                Vuforia.setInitParameters(activity, 0, "ATFMRrb/////AAAAGd0LzE71kkPjnoWoigFinSJp/L4eGD/p4zlkw3hvVdhzoBV4onBi+nxzNEWkwxwc6pcrRfNsnn62e67HaHM7OaAllEOmreJBAd1WzwI23lN0lGRcPec5ZQEyPIItZs+rI1nODhoPLAPLwsY6GUYw33pyAQg79ZDabU27EzC8aUM3IsFyB0J/gklWtitN51sRIeNTiiL1NV1O8fpHxSdVqtSJ3WyLb5rv/2kutb/RntJD/dKXKE0T7l+ipW91d4b7u92eNZegfMzM79ooF3pmuUR1vxOn6N71zGWrnCFXsRVTnwgVc0QXemUJyTsdyc2+7cgHTD4Fop2EPwPTyzen4gqUtaOuo018L9IOpx1v/2MC");
+                Log.i("VuforiaClass", "After setinitparameters");
+                do {
+                    Log.i("VuforiaClass", " Inside the initializing loop");
+                    mProgressValue = Vuforia.init();
+//                    publishProgress(mProgressValue);
 
-            }while (!isCancelled() && mProgressValue>=0 && mProgressValue<100);
-            return (mProgressValue > 0);
+                } while (!isCancelled() && mProgressValue >= -1 && mProgressValue < 100);
+                Log.i("VuforiaClass", String.valueOf(mProgressValue));
+                return (mProgressValue > 0);
+            }
         }
 
         protected void onProgressUpdate(Integer... values){
-            //these be values man, u can do some things with them like meme
+            //
         }
 
         protected void onPostExecute(Boolean result){
@@ -81,6 +92,7 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
 
         @Override
         protected Boolean doInBackground(Void... params) {
+            Log.i("trackerTask", "initializing tracker");
             return vuforiaAct.initTrackers();
         }
 
@@ -115,7 +127,7 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
         }
     }
     private void deInitTracker(){
-        tManager.deinitTracker(ObjectTracker.getClassType());
+        TrackerManager.getInstance().deinitTracker(ObjectTracker.getClassType());
     }
 
     protected void onSurfaceCreated(){

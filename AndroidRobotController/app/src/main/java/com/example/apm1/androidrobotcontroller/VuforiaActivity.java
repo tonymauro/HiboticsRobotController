@@ -38,6 +38,9 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
     OpenGlView view;
 
+
+    Boolean initAppARDone = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
@@ -54,9 +57,11 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         Log.i("oncreate vuforiaact", "after initializing");
 
         setExtendedTracking(true);
+        try {
+            wait(5000);
+        }catch(Exception e){
 
-
-
+        }
 //        TrackerManager tManager = TrackerManager.getInstance();
 //        ObjectTracker oTracker = (ObjectTracker) tManager.getTracker(ObjectTracker.getClassType());
 //
@@ -194,6 +199,8 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         initAppAr();
         //  renderer.setActive(true);
 
+        while(!initAppARDone){}
+
         addContentView(view, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
 
         //MAKE SOME UI LAYOUT
@@ -225,6 +232,8 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
                 "ImageTargetRenderer for details");
 
         view.setRenderer(renderer);
+
+        initAppARDone = true;
 
     }
 
