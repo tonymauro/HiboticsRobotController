@@ -12,6 +12,10 @@ public interface VuforiaActInterface {
 
     boolean initTrackers();
 
+    boolean deinitTrackers();
+
+    void onVuforiaResumed();
+
     boolean loadData();
 
     boolean startTrackers();
@@ -24,5 +28,5 @@ public interface VuforiaActInterface {
 
     void onVuforiaUpdate(State state);
 
-    void onInitArDone();
+    void onInitARDone();
 }

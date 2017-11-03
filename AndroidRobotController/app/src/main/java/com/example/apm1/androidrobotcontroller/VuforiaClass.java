@@ -21,6 +21,8 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
     VuforiaActInterface vuforiaAct;
     Activity activity;
 
+    Boolean vuforiaInitDone = false;
+
     int cameraType;
     Boolean started;
 
@@ -70,15 +72,25 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
 
                 } while (!isCancelled() && mProgressValue >= -1 && mProgressValue < 100);
                 Log.i("VuforiaClass", String.valueOf(mProgressValue));
-                return (mProgressValue > 0);
+                vuforiaInitDone = true;
+                if(mProgressValue == 100) return true;
+                return false;
             }
         }
+
+        //TODO: FInd out why the vuforiaInitDone being set in onPostExecute doesn't work
 
         protected void onProgressUpdate(Integer... values){
             //
         }
 
+        @Override
         protected void onPostExecute(Boolean result){
+            if(result) {
+                Log.i("onPostExecute", result?"successful":"unsuccessful"+" finish");
+            }
+            Log.i("postexecute init", "this works");
+            vuforiaInitDone = true;
             if(result){
                 initTrackerTask trackerTask = new initTrackerTask();
                 trackerTask.execute();
@@ -96,10 +108,14 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
             return vuforiaAct.initTrackers();
         }
 
+        @Override
         protected void onPostExecute(Boolean result){
+            Log.i("trackerTask", "onpostexecute");
             if (result) {
                 loadTrackerTask trackerTask = new loadTrackerTask();
                 trackerTask.execute();
+            }else{
+                Log.i("result wrong", "issue with intitializing trackers");
             }
         }
     }
@@ -108,13 +124,19 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
 
         @Override
         protected Boolean doInBackground(Void... params) {
+            Log.i("loadtrackertask", "in background");
             return vuforiaAct.loadTrackerData();
         }
 
+        @Override
         protected void onPostExecute(Boolean result){
-            System.gc();
-            Vuforia.registerCallback(VuforiaClass.this);
-            started = true;
+            if(result) {
+                Log.i("loadtrackertask", "inpostexecute");
+                vuforiaAct.onInitARDone();
+                System.gc();
+                Vuforia.registerCallback(VuforiaClass.this);
+                started = true;
+            }
         }
     }
 
@@ -141,13 +163,15 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
     }
 
     public void startAR(int camera){
+        Log.i("startAR", "starting ar stuff");
         cameraType = camera;
         startVuforiaTask vuforiaTask = new startVuforiaTask();
         vuforiaTask.execute();
-        vuforiaAct.onInitArDone();
+//        vuforiaAct.onInitARDone();
     }
 
     public void startCameraAndTrackers(int camera){
+        Log.i("VuforiaCLass", "startCameraAndTrackers");
         cameraType = camera;
         CameraDevice cam = CameraDevice.getInstance();
         if(!cam.init());
@@ -155,6 +179,10 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
         if(!cam.start());
         vuforiaAct.startTrackers();
         cameraRunning=true;
+    }
+
+    public CameraDevice getCam(){
+        return CameraDevice.getInstance();
     }
 
 

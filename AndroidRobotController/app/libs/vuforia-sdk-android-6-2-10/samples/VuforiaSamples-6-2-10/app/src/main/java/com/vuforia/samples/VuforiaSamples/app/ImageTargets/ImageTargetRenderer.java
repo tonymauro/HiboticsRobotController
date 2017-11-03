@@ -187,7 +187,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer, SampleAppRen
     // State should not be cached outside this method.
     public void renderFrame(State state, float[] projectionMatrix)
     {
-        // Renders video background replacing Renderer.DrawVideoBackground()
+        // Renders video background replacing RendererC.DrawVideoBackground()
         mSampleAppRenderer.renderVideoBackground();
 
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
@@ -275,7 +275,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer, SampleAppRen
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0,
                         mBuildingsModel.getNumObjectVertex());
 
-                SampleUtils.checkGLError("Renderer DrawBuildings");
+                SampleUtils.checkGLError("RendererC DrawBuildings");
             }
 
             SampleUtils.checkGLError("Render Frame");

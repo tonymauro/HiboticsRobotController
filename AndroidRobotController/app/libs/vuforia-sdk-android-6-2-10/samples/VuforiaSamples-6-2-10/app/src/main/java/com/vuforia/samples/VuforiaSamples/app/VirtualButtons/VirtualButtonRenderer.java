@@ -201,7 +201,7 @@ public class VirtualButtonRenderer implements GLSurfaceView.Renderer, SampleAppR
     // State should not be cached outside this method.
     public void renderFrame(State state, float[] projectionMatrix)
     {
-        // Renders video background replacing Renderer.DrawVideoBackground()
+        // Renders video background replacing RendererC.DrawVideoBackground()
         mSampleAppRenderer.renderVideoBackground();
         
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);

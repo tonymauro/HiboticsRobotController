@@ -21,6 +21,9 @@ import com.vuforia.Tracker;
 import com.vuforia.TrackerManager;
 import com.vuforia.Vuforia;
 
+import com.example.apm1.androidrobotcontroller.Utils.*;
+
+import java.util.Vector;
 
 public class VuforiaActivity extends AppCompatActivity implements VuforiaActInterface{
 
@@ -30,7 +33,10 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
     Boolean cameraW;
 
+    private Vector<Texture> textures;
+
     VuforiaClass vuforiaClass;
+//    SampleApplicationSession session;
 
     private Boolean eTracking;
 
@@ -38,7 +44,7 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
     OpenGlView view;
 
-
+    boolean vuforiaInitComp = false;
     Boolean initAppARDone = false;
 
     @Override
@@ -54,28 +60,33 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         Log.i("oncreate vuforiaact","wbefore initializing vuforiaclass");
         vuforiaClass = new VuforiaClass(this,parameters);
         vuforiaClass.initAr(this);
+  //      session = new SampleApplicationSession(this);
         Log.i("oncreate vuforiaact", "after initializing");
 
         setExtendedTracking(true);
-        try {
-            wait(5000);
-        }catch(Exception e){
 
-        }
+        textures = new Vector<Texture>();
+        addTextures();
+
 //        TrackerManager tManager = TrackerManager.getInstance();
 //        ObjectTracker oTracker = (ObjectTracker) tManager.getTracker(ObjectTracker.getClassType());
 //
 //        dataSet = oTracker.createDataSet();
 //        dataSet.load("Datathingy.xml", STORAGE_TYPE.STORAGE_APP);
 
-
-        device = CameraDevice.getInstance();
-
-        cameraW=false;
-        if(CameraDevice.getInstance().init(2)) cameraW = true;
-
-        CameraDevice.getInstance().selectVideoMode(CameraDevice.MODE.MODE_DEFAULT);
-        CameraDevice.getInstance().start();
+        while(!vuforiaInitComp){
+            vuforiaInitComp = vuforiaClass.vuforiaInitDone;
+      //      Log.i("onCreate", "waiting for vuforiaInitDone");
+        }
+        Log.i("onCreate", "Vuforia init finished");
+        //TODO: CLEAN THIS UP, THSI SHOULD ONLY BE IN START CAMERA AND TRACKERS
+//        device = CameraDevice.getInstance();
+//
+//        cameraW=false;
+//        if(CameraDevice.getInstance().init(2)) cameraW = true;
+//
+//        CameraDevice.getInstance().selectVideoMode(CameraDevice.MODE.MODE_DEFAULT);
+//        CameraDevice.getInstance().start();
         Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565,true);
         Log.i("onCreate vuforiaAct", "FINISHED");
     }
@@ -104,10 +115,16 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         boolean toReturn = true;
 
         TrackerManager manager = TrackerManager.getInstance();
+        if(manager == null) Log.i("inittrackres", "trackermanager is null");
         Tracker tracker = manager.initTracker(ObjectTracker.getClassType());
-
+        if(tracker == null) Log.i("inittrackres", "can't init tracker");
         if(tracker == null) toReturn = false;
         return toReturn;
+    }
+
+    @Override
+    public boolean deinitTrackers() {
+        return false;
     }
 
     @Override
@@ -131,6 +148,14 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
     }
 
     @Override
+    public void onVuforiaResumed() {
+        if (view != null) {
+            view.setVisibility(View.VISIBLE);
+            view.onResume();
+        }
+    }
+
+    @Override
     public boolean startTrackers() {
 
         boolean onReturn = true;
@@ -148,21 +173,22 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
     @Override
     public boolean loadTrackerData() {
-        TrackerManager tm = TrackerManager.getInstance();
-        ObjectTracker ot = (ObjectTracker) tm.getTracker(ObjectTracker.getClassType());
-        if(ot==null) return false;
-        if(dataSet == null) dataSet = ot.createDataSet();
-        if(dataSet == null) return false;
-        if(!dataSet.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APP)) return false;
-        if(!ot.activateDataSet(dataSet)) return false;
+            TrackerManager tm = TrackerManager.getInstance();
+            ObjectTracker ot = (ObjectTracker) tm.getTracker(ObjectTracker.getClassType());
+            if (ot == null) return false;
+            if (dataSet == null) dataSet = ot.createDataSet();
+            Log.i("loadTrackerData", "after createdataset");
+            if (dataSet == null) return false;
+            if (!dataSet.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) return false;
+            if (!ot.activateDataSet(dataSet)) return false;
 
-        int numTrackables = dataSet.getNumTrackables();
-        for(int i =0; i < numTrackables; i++){
-            Trackable trackable = dataSet.getTrackable(i);
-            if(getExtendedTracking()) trackable.startExtendedTracking();
+            int numTrackables = dataSet.getNumTrackables();
+            for (int i = 0; i < numTrackables; i++) {
+                Trackable trackable = dataSet.getTrackable(i);
+                if (getExtendedTracking()) trackable.startExtendedTracking();
+            }
+            return true;
 
-        }
-        return true;
     }
 
     @Override
@@ -179,32 +205,38 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
     @Override
     public void onVuforiaUpdate(State state) {
-        TrackerManager tm = TrackerManager.getInstance();
-        ObjectTracker ot = (ObjectTracker) tm.getTracker(ObjectTracker.getClassType());
-        if(ot==null||dataSet==null||ot.getActiveDataSet(0)==null){
-            //bad news bears my man
-        }
-
-        unloadTrackerData();
-        loadTrackerData();
+//        TrackerManager tm = TrackerManager.getInstance();
+//        ObjectTracker ot = (ObjectTracker) tm.getTracker(ObjectTracker.getClassType());
+//        if(ot==null||dataSet==null||ot.getActiveDataSet(0)==null){
+//            //bad news bears my man
+//        }
+//
+//        unloadTrackerData();
+//        loadTrackerData();
     }
 
 
     //Todo: FIX THE RENDERER AND ADD THE UI LAYOUT
 
     @Override
-    public void onInitArDone() {
+    public void onInitARDone() {
+
+        Log.i("onInitARDone", "first line, we made it");
         //FIX THE RENDERER
 
         initAppAr();
         //  renderer.setActive(true);
 
-        while(!initAppARDone){}
+        while(!initAppARDone){
 
+        }
+
+        renderer.setActive(true);
         addContentView(view, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
 
         //MAKE SOME UI LAYOUT
 
+    //    vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
         vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
     }
 
@@ -228,13 +260,25 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         view = new OpenGlView(this);
         view.init(translucent,depthSize,stencilSize);
 
-        renderer = new ImageTargetRenderer(this,vuforiaClass,"some targets should be here with / marks, look at" +
-                "ImageTargetRenderer for details");
+        renderer = new ImageTargetRenderer(this,vuforiaClass);
+  //      renderer = new ImageTargetRenderer(this,session,"targets");
+
+        renderer.setTextures(textures);
 
         view.setRenderer(renderer);
+        view.setVisibility(View.VISIBLE);
 
         initAppARDone = true;
 
+    }
+
+    void addTextures(){
+        textures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png",
+                getAssets()));
+        textures.add(Texture.loadTextureFromApk("TextureTeapotBlue.png",
+                getAssets()));
+        textures.add(Texture.loadTextureFromApk("TextureTeapotRed.png",
+                getAssets()));
     }
 
 }
