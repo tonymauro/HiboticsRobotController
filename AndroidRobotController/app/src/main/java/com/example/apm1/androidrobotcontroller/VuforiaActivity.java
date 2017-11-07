@@ -213,6 +213,12 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 //
 //        unloadTrackerData();
 //        loadTrackerData();
+        if(state.getNumTrackableResults()>0){
+            Log.i("onvuforiaupdate", "YO WASSUP G GETTING SOME TRACKABLE RESULTS UP IN THIS ");
+            Log.i("onVUforiaUpdate", String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
+                    String.valueOf(state.getTrackableResult(0).getPose().getData()[7]*100/2.54)+ "         "+
+                    String.valueOf(state.getTrackableResult(0).getPose().getData()[11]*100/2.54));
+        }
     }
 
 
@@ -232,12 +238,13 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         }
 
         renderer.setActive(true);
-        addContentView(view, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
-
+    //    addContentView(view, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
         //MAKE SOME UI LAYOUT
 
     //    vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
         vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
+        view.setVisibility(View.INVISIBLE);
+
     }
 
     public void setExtendedTracking(Boolean value){
@@ -250,7 +257,6 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
 
     //Inits some of the useful app stuff like the OpenGl View and says stuff about it
-    //Todo: Crosscheck with the ImageTargets file to make sure nothing about textures
     //Doesn't say anything about textures I think
     public void initAppAr(){
         int depthSize = 16;

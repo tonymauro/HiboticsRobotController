@@ -10,6 +10,8 @@
     android:paddingTop="@dimen/fab_margin"
     tools:context="com.example.apm1.androidrobotcontroller.MainActivity">
 
+    <include layout="@layout/content_main"/>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -148,9 +150,18 @@
         android:id="@+id/beginVuforia"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/BUB"
+        android:layout_alignParentEnd="true"
         android:layout_below="@+id/BUB"
         android:onClick="switchAct"
-        android:text="Button" />
+        android:text="Begin Vuforia Activity" />
+
+    <Button
+        android:id="@+id/vuforios"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/editText"
+        android:layout_below="@+id/TextView"
+        android:onClick="bVuforia"
+        android:text="vuforios" />
 
 </RelativeLayout>

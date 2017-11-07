@@ -481,6 +481,10 @@ public class MainActivity extends AppCompatActivity {
         byte[] buffer = {(byte)4,(byte)2};
     }
 
+    public void bVuforia(View v){
+
+    }
+
     public void sendCircle(View v) {
         byte[] buffer = {(byte)1,(byte)0};
 

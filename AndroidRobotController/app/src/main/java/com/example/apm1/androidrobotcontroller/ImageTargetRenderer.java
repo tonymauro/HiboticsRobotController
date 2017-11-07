@@ -194,9 +194,13 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer, RendererC
         }
         // Did we find any trackables this frame?
         for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++) {
-            Log.i("TRACKABLE RESULT       ", String.valueOf(state.getTrackableResult(0).getPose().getData()[3]) + "    "+
-                    String.valueOf(state.getTrackableResult(0).getPose().getData()[7])+ "         "+
-                    String.valueOf(state.getTrackableResult(0).getPose().getData()[11]));
+            Log.i("TRACKABLE RESULT       ", String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
+                    String.valueOf(state.getTrackableResult(0).getPose().getData()[7]*100/2.54)+ "         "+
+                    String.valueOf(state.getTrackableResult(0).getPose().getData()[11]*100/2.54));
+//            try {
+//                Thread.sleep(100);
+//            }catch(InterruptedException e){
+//            }
             TrackableResult result = state.getTrackableResult(tIdx);
             Trackable trackable = result.getTrackable();
             printUserData(trackable);
