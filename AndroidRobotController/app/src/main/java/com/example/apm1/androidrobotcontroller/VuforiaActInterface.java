@@ -16,8 +16,6 @@ public interface VuforiaActInterface {
 
     void onVuforiaResumed();
 
-    boolean loadData();
-
     boolean startTrackers();
 
     boolean stopTrackers();

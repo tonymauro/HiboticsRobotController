@@ -17,6 +17,7 @@ import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
@@ -26,6 +27,16 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vuforia.CameraDevice;
+import com.vuforia.DataSet;
+import com.vuforia.Matrix34F;
+import com.vuforia.Matrix44F;
+import com.vuforia.ObjectTracker;
+import com.vuforia.STORAGE_TYPE;
+import com.vuforia.State;
+import com.vuforia.Trackable;
+import com.vuforia.Tracker;
+import com.vuforia.TrackerManager;
 import com.vuforia.Vuforia;
 
 import java.io.FileInputStream;
@@ -36,7 +47,7 @@ import java.util.List;
 //import android.widget.ToggleButton;
 //import java.io.FileDescriptor;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements VuforiaActInterface {
 
 
     UsbAccessory megaADK;
@@ -49,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     Boolean rP;
     GLSurfaceView glSurfaceView;
 
+    VuforiaParameters VParams;
 
     IntentFilter wifiP2P;
     Channel wifiChannel;
@@ -67,6 +79,10 @@ public class MainActivity extends AppCompatActivity {
     boolean extendedTracking = true;
 
     boolean wifiP2PEnabled;
+
+    DataSet dataSet;
+    State state;
+    VuforiaClass vClass;
 
  //   Vuforia vuforia = new Vuforia();
     private static final String ACTION_USB_PERMISSION = "com.google.android.DemoKit.action.USB_PERMISSION";
@@ -163,9 +179,6 @@ public class MainActivity extends AppCompatActivity {
 //        registerReceiver(wifiReceiver,wifiP2P);
 
         super.onCreate(savedInstanceState);
-
-        InitVuforiaTask turtle = new InitVuforiaTask();
-        turtle.mActivity=new Activity();
 
         setContentView(R.layout.activity_main);
 
@@ -482,7 +495,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void bVuforia(View v){
-
+        VParams = new VuforiaParameters();
+        VParams.setVuforiaLicenseKey(
+                "ATFMRrb/////AAAAGd0LzE71kkPjnoWoigFinSJp/L4eGD/p4zlkw3hvVdhzoBV4onBi+nxzNEWkwxwc6pc" +
+                        "rRfNsnn62e67HaHM7OaAllEOmreJBAd1WzwI23lN0lGRcPec5ZQEyPIItZs+rI1nODhoPLAPLwsY6GUYw33" +
+                        "pyAQg79ZDabU27EzC8aUM3IsFyB0J/gklWtitN51sRIeNTiiL1NV1O8fpHxSdVqtSJ3WyLb5rv/2kutb/Rn" +
+                        "tJD/dKXKE0T7l+ipW91d4b7u92eNZegfMzM79ooF3pmuUR1vxOn6N71zGWrnCFXsRVTnwgVc0QXemUJyTsd" +
+                        "yc2+7cgHTD4Fop2EPwPTyzen4gqUtaOuo018L9IOpx1v/2MC");
+        vClass = new VuforiaClass(this, VParams);
+        vClass.initAr(this);
     }
 
     public void sendCircle(View v) {
@@ -587,31 +608,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private class InitVuforiaTask extends AsyncTask<Void, Integer, Boolean> {
-        private int mProgressValue = -1;
-        private Activity mActivity;
-        private Object mShutdownLock = new Object();
-        protected Boolean doInBackground(Void... params){
-            synchronized (mShutdownLock){
-                Vuforia.setInitParameters(mActivity,
-                        0,
-                        "ASmxFXn/////AAAAGULt39uVqk5Apdm/e2Oz3PgxOgTnKuKirQ2RNnHtSMdoJ" +
-                                "/f4oikqW0F6fHIwUp2EBmXxcFj976SqvXYsBR0oSITs92OjWfHjhj" +
-                                "r55Xxcr73LGe0T7NC7iAWoK+AgEp/3YFed5TDdJPuLnpj9vVKZhxs" +
-                                "SbhUlCVOLEmoPVrlQ9hN4XI/FfzAIJjNKRyifq+686U0kS9BEB/WD" +
-                                "bMZyzxbb69nZXemrAJiDaSItce5cQRIG9LCId3uj7kqum5XyvGZnC" +
-                                "vJWnpJ1fXqnrcGdZplXKbI/4GQIfuRWNltPF+uV7DohhKaKgUMvpO" +
-                                "8O9PfS2WFeXSzUMgzZ+yWSaAZ+D48D4uqnoY0cyU+zyMI2+dMog3g7");
-                do
-                {
-                    mProgressValue = Vuforia.init();
-                    publishProgress(mProgressValue);
-                }while (!isCancelled() && mProgressValue >= 0 && mProgressValue < 100);
-                return (mProgressValue > 0);
-            }
-        }
-
-    }
 
 //
 //    public boolean doLoadTrackersData()
@@ -677,4 +673,135 @@ public class MainActivity extends AppCompatActivity {
     public void resetData(){
 
     }
+
+    @Override
+    public boolean initTrackers() {
+        boolean toReturn = true;
+        TrackerManager manager = TrackerManager.getInstance();
+        if(manager == null) Log.i("inittrackres", "trackermanager is null");
+        Tracker tracker = manager.initTracker(ObjectTracker.getClassType());
+        if(tracker == null) Log.i("inittrackres", "can't init tracker");
+        if(tracker == null) toReturn = false;
+        return toReturn;
+    }
+
+    @Override
+    public boolean deinitTrackers() {
+        return false;
+    }
+
+    @Override
+    public void onVuforiaResumed() {
+
+    }
+
+    @Override
+    public boolean startTrackers() {
+        boolean onReturn = true;
+        Tracker objectTracker = TrackerManager.getInstance().getTracker(ObjectTracker.getClassType());
+
+        if(objectTracker!= null) objectTracker.start();
+        return true;
+    }
+
+    @Override
+    public boolean stopTrackers() {
+        return false;
+    }
+
+    @Override
+    public boolean unloadTrackerData() {
+        TrackerManager tm = TrackerManager.getInstance();
+        ObjectTracker ot = (ObjectTracker)tm.getTracker(ObjectTracker.getClassType());
+        if(ot==null) return false;
+        if(dataSet != null && dataSet.isActive()){
+            if(!ot.deactivateDataSet(dataSet)) return false;
+            dataSet = null;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean loadTrackerData() {
+        TrackerManager tm = TrackerManager.getInstance();
+        ObjectTracker ot = (ObjectTracker) tm.getTracker(ObjectTracker.getClassType());
+        if (ot == null) return false;
+        if (dataSet == null) dataSet = ot.createDataSet();
+        Log.i("loadTrackerData", "after createdataset");
+        if (dataSet == null) return false;
+        if (!dataSet.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) return false;
+        if (!ot.activateDataSet(dataSet)) return false;
+
+        int numTrackables = dataSet.getNumTrackables();
+        for (int i = 0; i < numTrackables; i++) {
+            Trackable trackable = dataSet.getTrackable(i);
+            if (getExtendedTracking()) trackable.startExtendedTracking();
+        }
+        return true;
+    }
+
+    @Override
+    public void onVuforiaUpdate(State state) {
+//        TextView T = (TextView) findViewById(R.id.TextView);
+//        T.setTextSize(15);
+//        String turtleman = String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
+//                String.valueOf(state.getTrackableResult(0).getPose().getData()[7]*100/2.54)+ "         "+
+//                String.valueOf(state.getTrackableResult(0).getPose().getData()[11]*100/2.54);
+//        T.setText(turtleman);
+        if(state.getNumTrackableResults()>0){
+            Log.i("onvupdate","at least 1 trackable found");
+            float[] pose = translation(state.getTrackableResult(0).getPose().getData());
+            Log.i("x",String.valueOf(pose[0]));
+            Log.i("y",String.valueOf(pose[1]));
+            Log.i("z",String.valueOf(pose[2]));
+
+        }
+
+//        this.state = state;
+    }
+
+    @Override
+    public void onInitARDone() {
+        Log.i("onInitARDone", "we done my dude");
+        //I CAN ADD STUFF FROM VUFORIAACTIVITY IF WE WANT AN OVERLAY
+        vClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
+    }
+
+    public Boolean getExtendedTracking(){
+        return extendedTracking;
+    }
+
+    public void setExtendedTracking(Boolean et){
+        extendedTracking = et;
+    }
+
+    public float[] translation(float[] pose){
+        Matrix34F matrix34 = new Matrix34F();
+        matrix34.setData(pose);
+        Matrix44F matrix44 = com.vuforia.Tool.convert2GLMatrix(matrix34);
+        float[] newRes = new float[16];
+        Matrix.multiplyMM(newRes
+                ,0, back, 0 , matrix44.getData(),0);
+        float[] edit = {newRes[3],newRes[7],newRes[11],newRes[15]};
+        float[] translation = {edit[0]/edit[3],edit[1]/edit[3],edit[2]/edit[3]};
+        return translation;
+    }
+
+
+
+        float[] back = {
+                0,-1,0,0,
+                -1,0,0,0,
+                0,0,-1,0,
+                0,0,0,1
+        };
+
+        float[] front = {
+                0,1,0,0
+                -1,0,0,0,
+                0,0,1,0,
+                0,0,0,1
+        };
+
+
 }

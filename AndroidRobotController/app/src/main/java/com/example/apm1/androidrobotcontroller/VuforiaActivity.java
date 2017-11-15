@@ -4,8 +4,10 @@ import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Process;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -50,6 +52,7 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_vuforia);
         VuforiaParameters parameters = new VuforiaParameters();
         parameters.setVuforiaLicenseKey(
                 "ATFMRrb/////AAAAGd0LzE71kkPjnoWoigFinSJp/L4eGD/p4zlkw3hvVdhzoBV4onBi+nxzNEWkwxwc6pc" +
@@ -91,26 +94,36 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         Log.i("onCreate vuforiaAct", "FINISHED");
     }
 
-    public void returnMain(View v){
-        Intent returnM = new Intent(this,MainActivity.class);
-        startActivity(returnM);
-    }
 
-    public void imageFound(String string){
-        Toast.makeText(this,string + " was found", Toast.LENGTH_SHORT).show();
-    }
+   public void returnMain(View v){
+       Intent returnM = new Intent(this,MainActivity.class);
+       startActivity(returnM);
+
+   }
+
+//    public void imageFound(String string){
+//        Toast.makeText(this,string + " was found", Toast.LENGTH_SHORT).show();
+//    }
 
     @Override
     protected void onPause(){
         super.onPause();
-        if(view!= null){
-            view.setVisibility(View.INVISIBLE);
-            view.onPause();
-        }
+//        if(view!= null){
+//            view.setVisibility(View.INVISIBLE);
+//            view.onPause();
+//        }
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        CoordinatorLayout layout = (CoordinatorLayout) LayoutInflater.from(this).inflate(R.layout.activity_vuforia,null);
+
     }
 
     @Override
     public boolean initTrackers(){
+
 
         boolean toReturn = true;
 
@@ -128,31 +141,13 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
     }
 
     @Override
-    public boolean loadData() {
-        TrackerManager manager = TrackerManager.getInstance();
-        ObjectTracker oTracker = (ObjectTracker) manager.getTracker(ObjectTracker.getClassType());
-
-        dataSet = oTracker.createDataSet();
-
-        if(!dataSet.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) return false;
-
-        if(!oTracker.activateDataSet(dataSet)) return false;
-
-        int numTrackables = dataSet.getNumTrackables();
-        for(int i = 0; i < numTrackables; i++){
-            Trackable trackable = dataSet.getTrackable(i);
-            if(getExtendedTracking())
-                trackable.startExtendedTracking();
-        }
-        return true;
-    }
-
-    @Override
     public void onVuforiaResumed() {
-        if (view != null) {
-            view.setVisibility(View.VISIBLE);
-            view.onResume();
-        }
+//        if (view != null) {
+//            view.setVisibility(View.VISIBLE);
+//            view.onResume();
+//        }
+        CoordinatorLayout layout = (CoordinatorLayout) LayoutInflater.from(this).inflate(R.layout.activity_vuforia,null);
+
     }
 
     @Override
@@ -237,13 +232,14 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
         }
 
-        renderer.setActive(true);
-    //    addContentView(view, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
+//        renderer.setActive(true);
+//        addContentView(view, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
         //MAKE SOME UI LAYOUT
+        CoordinatorLayout layout = (CoordinatorLayout) LayoutInflater.from(this).inflate(R.layout.activity_vuforia,null);
 
-    //    vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
+//        vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
         vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
-        view.setVisibility(View.INVISIBLE);
+//        view.setVisibility(View.INVISIBLE);
 
     }
 
@@ -263,16 +259,15 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         int stencilSize = 0;
         boolean translucent = Vuforia.requiresAlpha();
 
-        view = new OpenGlView(this);
-        view.init(translucent,depthSize,stencilSize);
+//        view = new OpenGlView(this);
+//        view.init(translucent,depthSize,stencilSize);
 
-        renderer = new ImageTargetRenderer(this,vuforiaClass);
-  //      renderer = new ImageTargetRenderer(this,session,"targets");
+//        renderer = new ImageTargetRenderer(this,vuforiaClass);
 
-        renderer.setTextures(textures);
+//        renderer.setTextures(textures);
 
-        view.setRenderer(renderer);
-        view.setVisibility(View.VISIBLE);
+//        view.setRenderer(renderer);
+//        view.setVisibility(View.VISIBLE);
 
         initAppARDone = true;
 

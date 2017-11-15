@@ -179,7 +179,6 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
         if(!cam.start());
         vuforiaAct.startTrackers();
         cameraRunning=true;
-
     }
 
     public CameraDevice getCam(){
