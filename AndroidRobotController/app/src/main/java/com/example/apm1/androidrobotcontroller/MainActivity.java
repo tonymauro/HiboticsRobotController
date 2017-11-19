@@ -26,6 +26,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.vuforia.CameraDevice;
 import com.vuforia.DataSet;
@@ -71,18 +72,21 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     Boolean isWifiP2pEnabled = false;
     Context context;
 
-    String et1;
-    String et2;
+    Vector vector;
 
     private List<WifiP2pDevice> peers;
 
     boolean extendedTracking = true;
+
+    boolean bigO = false;
 
     boolean wifiP2PEnabled;
 
     DataSet dataSet;
     State state;
     VuforiaClass vClass;
+
+    Thread vuforiaThreadO;
 
  //   Vuforia vuforia = new Vuforia();
     private static final String ACTION_USB_PERMISSION = "com.google.android.DemoKit.action.USB_PERMISSION";
@@ -177,6 +181,8 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
        // wifiReceiver = new WifiDirectBroadcastReceiver(wifiManager, wifiChannel, this);
 //        registerReceiver(wifiReceiver,wifiP2P);
+
+        vector = new Vector(new double[]{999,999,999});
 
         super.onCreate(savedInstanceState);
 
@@ -449,6 +455,10 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
             }
         }
+    }
+
+    public void vArduino(View v){
+        bigO = ((ToggleButton) v).isChecked();
     }
 
     public void sendAndReceive(View v){
@@ -742,6 +752,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
     @Override
     public void onVuforiaUpdate(State state) {
+        this.state = state;
 //        TextView T = (TextView) findViewById(R.id.TextView);
 //        T.setTextSize(15);
 //        String turtleman = String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
@@ -750,11 +761,36 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 //        T.setText(turtleman);
         if(state.getNumTrackableResults()>0){
             Log.i("onvupdate","at least 1 trackable found");
-            float[] pose = translation(state.getTrackableResult(0).getPose().getData());
-            Log.i("x",String.valueOf(pose[0]));
-            Log.i("y",String.valueOf(pose[1]));
-            Log.i("z",String.valueOf(pose[2]));
-
+            float[] pose = state.getTrackableResult(0).getPose().getData();
+            double x = pose[7]*100/2.54;
+            double y = pose[3]*100/2.54;
+            double z = pose[11]*100/2.54;
+            Log.i("x",String.valueOf(x));
+            Log.i("y",String.valueOf(y));
+            Log.i("z",String.valueOf(z));
+            vector.updateVector(new double[]{x,y,z});
+            if(bigO){
+                try {
+                    if (oS != null) {
+                        if (vector.x > 1) {
+                            Log.i("onVuforiaUpdate   ", "we be going right");
+                            oS.write(new byte[]{(byte)10,(byte)2});
+                        } else if (vector.x < -1) {
+                            // go left my dude
+                            Log.i("onVuforiaUpdate   ", "we be going left");
+                            oS.write(new byte[]{(byte)10,(byte)3});
+                        }else{
+                            oS.write(new byte[]{(byte)10,(byte) 7});
+                            //yeah we stop my dude
+                        }
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                //here we do the stuff
+            }
+        }else{
+            vector.updateVector(new double[]{-999,-999,-999});
         }
 
 //        this.state = state;
@@ -803,5 +839,79 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
                 0,0,0,1
         };
 
+
+    public class Vector{
+        private double x;
+        private double y;
+        private double z;
+
+        private double[] values;
+
+        public Vector(double x, double y, double z){
+            this.x = x;
+            this.y = y;
+            this.z = y;
+        }
+
+        public Vector(double[] values){
+            this.x = values[0];
+            this.y = values[1];
+            this.z = values[2];
+        }
+
+        public double getX(){
+            return x;
+        }
+
+        public double getY(){
+            return y;
+        }
+
+        public double getZ(){
+            return z;
+        }
+
+        public double[] getValues(){
+            return values;
+        }
+
+        public double[] updateVector(double[] values){
+            this.values = values;
+            x = values[0];
+            y = values[1];
+            z = values[2];
+            return values;
+        }
+    }
+
+    public class vuforiaSender implements Runnable{
+
+        Vector vVector;
+        FileOutputStream outputStream;
+
+        public vuforiaSender(Vector vector, FileOutputStream oS){
+            outputStream = oS;
+            vVector = vector;
+        }
+
+        @Override
+        public void run() {
+            while(bigO) {
+                vVector = vector;
+                if (vVector.getValues()[0] == 999 && vVector.getValues()[1] == 999 && vVector.getValues()[2] == 999) {
+                    break;
+                } else if (vVector.getX() > 1) {
+                    Log.i("vuforiaSender Thread  ", "we are going right my dude");
+                    //go right my man
+                } else if (vVector.getX() < -1) {
+                    Log.i("vuforiaSender Thread ", " we are going left my dude");
+                    //go left my man
+                }
+                Log.i("vuforiaSender Thread", "we are cool");
+            }
+        }
+
+
+    }
 
 }

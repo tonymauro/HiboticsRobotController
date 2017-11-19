@@ -193,10 +193,15 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer, RendererC
       //      Log.i("TRACKABLE RESULT", "NONE FOUND YET");
         }
         // Did we find any trackables this frame?
+
         for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++) {
-            Log.i("TRACKABLE RESULT       ", String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
-                    String.valueOf(state.getTrackableResult(0).getPose().getData()[7]*100/2.54)+ "         "+
-                    String.valueOf(state.getTrackableResult(0).getPose().getData()[11]*100/2.54));
+//            Log.i("TRACKABLE RESULT       ", String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
+//                    String.valueOf(state.getTrackableResult(0).getPose().getData()[7]*100/2.54)+ "         "+
+//                    String.valueOf(state.getTrackableResult(0).getPose().getData()[11]*100/2.54));
+
+
+
+
 //            try {
 //                Thread.sleep(100);
 //            }catch(InterruptedException e){
@@ -271,6 +276,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer, RendererC
     private void printUserData(Trackable trackable)
     {
         String userData = (String) trackable.getUserData();
+
         Log.d(LOGTAG, "UserData:Retreived User Data	\"" + userData + "\"");
     }
     

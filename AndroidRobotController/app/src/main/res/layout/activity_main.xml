@@ -164,4 +164,16 @@
         android:onClick="bVuforia"
         android:text="vuforios" />
 
+    <ToggleButton
+        android:id="@+id/toggleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/FWard"
+        android:layout_below="@+id/preq"
+        android:text="VuforiaArduino"
+        android:textOff="Turn on"
+        android:textOn="Turn off"
+        android:onClick="vArduino"
+        tools:text="VuforiaArduino" />
+
 </RelativeLayout>

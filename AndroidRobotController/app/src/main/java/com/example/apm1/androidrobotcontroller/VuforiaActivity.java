@@ -2,6 +2,7 @@ package com.example.apm1.androidrobotcontroller;
 
 import android.app.ActionBar;
 import android.content.Intent;
+import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.Process;
 import android.support.design.widget.CoordinatorLayout;
@@ -14,6 +15,8 @@ import android.widget.Toast;
 
 import com.vuforia.CameraDevice;
 import com.vuforia.DataSet;
+import com.vuforia.Matrix34F;
+import com.vuforia.Matrix44F;
 import com.vuforia.ObjectTracker;
 import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.STORAGE_TYPE;
@@ -30,10 +33,6 @@ import java.util.Vector;
 public class VuforiaActivity extends AppCompatActivity implements VuforiaActInterface{
 
     DataSet dataSet;
-
-    CameraDevice device;
-
-    Boolean cameraW;
 
     private Vector<Texture> textures;
 
@@ -208,11 +207,19 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 //
 //        unloadTrackerData();
 //        loadTrackerData();
+
+
+
         if(state.getNumTrackableResults()>0){
-            Log.i("onvuforiaupdate", "YO WASSUP G GETTING SOME TRACKABLE RESULTS UP IN THIS ");
-            Log.i("onVUforiaUpdate", String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
-                    String.valueOf(state.getTrackableResult(0).getPose().getData()[7]*100/2.54)+ "         "+
-                    String.valueOf(state.getTrackableResult(0).getPose().getData()[11]*100/2.54));
+//            float[] pose = translation(state.getTrackableResult(0).getPose().getData());
+
+
+
+            Log.i("onVuforiaUpdate",
+                    "x: " +
+                    String.valueOf(state.getTrackableResult(0).getPose().getData()[7]*100/2.54) + "\n"+
+                    "y: " + String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54)+ "\n"+
+                    "z: " + String.valueOf(state.getTrackableResult(0).getPose().getData()[11]*100/2.54));
         }
     }
 
@@ -232,11 +239,9 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
 
         }
 
-//        renderer.setActive(true);
-//        addContentView(view, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
+        renderer.setActive(true);
+        addContentView(view, new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.MATCH_PARENT));
         //MAKE SOME UI LAYOUT
-        CoordinatorLayout layout = (CoordinatorLayout) LayoutInflater.from(this).inflate(R.layout.activity_vuforia,null);
-
 //        vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
         vuforiaClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
 //        view.setVisibility(View.INVISIBLE);
@@ -259,15 +264,15 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         int stencilSize = 0;
         boolean translucent = Vuforia.requiresAlpha();
 
-//        view = new OpenGlView(this);
-//        view.init(translucent,depthSize,stencilSize);
+        view = new OpenGlView(this);
+        view.init(translucent,depthSize,stencilSize);
 
-//        renderer = new ImageTargetRenderer(this,vuforiaClass);
+        renderer = new ImageTargetRenderer(this,vuforiaClass);
 
-//        renderer.setTextures(textures);
+        renderer.setTextures(textures);
 
-//        view.setRenderer(renderer);
-//        view.setVisibility(View.VISIBLE);
+        view.setRenderer(renderer);
+        view.setVisibility(View.VISIBLE);
 
         initAppARDone = true;
 
@@ -281,5 +286,37 @@ public class VuforiaActivity extends AppCompatActivity implements VuforiaActInte
         textures.add(Texture.loadTextureFromApk("TextureTeapotRed.png",
                 getAssets()));
     }
+
+    public float[] translation(float[] pose){
+        Matrix34F matrix34 = new Matrix34F();
+        matrix34.setData(pose);
+        Matrix44F matrix44 = com.vuforia.Tool.convert2GLMatrix(matrix34);
+        float[] newRes = new float[16];
+        Matrix.multiplyMM(newRes
+                ,0, back, 0 , matrix44.getData(),0);
+//        for(int i =0; i < newRes.length-1; i++){
+//            Log.i("translation", String.valueOf(i)+ "  " + String.valueOf(newRes[i]) + "\n");
+//        }
+        float[] edit = {newRes[3],newRes[7],newRes[11],newRes[15]};
+        float[] translation = {edit[0]/edit[3],edit[1]/edit[3],edit[2]/edit[3]};
+//        Log.i("translation       ",String.valueOf(edit[0]) + "\n" + String.valueOf(edit[1]) + "\n" + String.valueOf(edit[3]));
+        return translation;
+    }
+
+
+
+    float[] back = {
+            0,-1,0,0,
+            -1,0,0,0,
+            0,0,-1,0,
+            0,0,0,1
+    };
+
+    float[] front = {
+            0,1,0,0
+            -1,0,0,0,
+            0,0,1,0,
+            0,0,0,1
+    };
 
 }
