@@ -1,6 +1,5 @@
 package com.example.apm1.androidrobotcontroller;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,7 +17,6 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.support.v7.app.AppCompatActivity;
@@ -38,18 +36,15 @@ import com.vuforia.State;
 import com.vuforia.Trackable;
 import com.vuforia.Tracker;
 import com.vuforia.TrackerManager;
-import com.vuforia.Vuforia;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-//import android.widget.ToggleButton;
-//import java.io.FileDescriptor;
-
 public class MainActivity extends AppCompatActivity implements VuforiaActInterface {
 
+    Boolean initted = false;
 
     UsbAccessory megaADK;
     UsbManager usbManager;
@@ -80,15 +75,12 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
     boolean bigO = false;
 
-    boolean wifiP2PEnabled;
+//    boolean wifiP2PEnabled;
 
     DataSet dataSet;
     State state;
     VuforiaClass vClass;
 
-    Thread vuforiaThreadO;
-
- //   Vuforia vuforia = new Vuforia();
     private static final String ACTION_USB_PERMISSION = "com.google.android.DemoKit.action.USB_PERMISSION";
 
     //First case checks if we do not have permission to perform an action
@@ -196,14 +188,14 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         glSurfaceView = new GLSurfaceView(context);
 //        registerReceiver(usbReceiver, usbFilter);
         Log.i("Create", "Finished on create");
-        if (getLastNonConfigurationInstance() != null) {
+//        if (getLastNonConfigurationInstance() != null) {
 //            if(megaADK != null) {
 //                megaADK = (UsbAccessory) getLastNonConfigurationInstance();
 //                setUp(megaADK);
 //            }else{
 //                Toast.makeText(this,"megaADK wasn't defined",Toast.LENGTH_SHORT).show();
 //            }
-        }
+//        }
 
 //        final EditText editText = (EditText) findViewById(R.id.editText);
 //
@@ -286,34 +278,43 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     }
 
 
-    private void closeAccessory() {
-        try {
-            fileDescriptor.close();
-        } catch (IOException e) {
-        }
-        fileDescriptor = null;
-        megaADK = null;
-    }
 
-    public void connect(){
-        if(peers!=null&&peers.size()!=0){
-            WifiP2pDevice device = peers.get(0);
-            WifiP2pConfig config = new WifiP2pConfig();
-            config.deviceAddress = device.deviceAddress;
-            config.wps.setup = WpsInfo.PBC;
-            wifiManager.connect(wifiChannel, config, new ActionListener() {
-                @Override
-                public void onSuccess() {
-                    //BRoadcast receiver should say connected
-                }
+    //Dont use this yet cus I didn't test it;
 
-                @Override
-                public void onFailure(int reason){
-                    Toast.makeText(MainActivity.this, "Connect failed", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
+//    private void closeAccessory() {
+//        try {
+//            fileDescriptor.close();
+//        } catch (IOException e) {
+//        }
+//        fileDescriptor = null;
+//        megaADK = null;
+//    }
+
+
+
+
+
+    //THIS STUFF IS FOR WIFI DIRECT
+
+//    public void connect(){
+//        if(peers!=null&&peers.size()!=0){
+//            WifiP2pDevice device = peers.get(0);
+//            WifiP2pConfig config = new WifiP2pConfig();
+//            config.deviceAddress = device.deviceAddress;
+//            config.wps.setup = WpsInfo.PBC;
+//            wifiManager.connect(wifiChannel, config, new ActionListener() {
+//                @Override
+//                public void onSuccess() {
+//                    //BRoadcast receiver should say connected
+//                }
+//
+//                @Override
+//                public void onFailure(int reason){
+//                    Toast.makeText(MainActivity.this, "Connect failed", Toast.LENGTH_SHORT).show();
+//                }
+//            });
+//        }
+//    }
 
     boolean successful;
 
@@ -345,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         wifiManager.connect(wifiChannel,config,new ActionListener(){
             @Override
             public void onSuccess() {
-                Toast.makeText(context, "CONNECteD BABY", Toast.LENGTH_SHORT);
+                Toast.makeText(context, "CONNECteD BABY", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -354,6 +355,8 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
             }
         });
     }
+
+
 
 
 
@@ -422,6 +425,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
                 Toast.makeText(this,"Clear Display", Toast.LENGTH_SHORT).show();
                 oS.write(buffer);
             }catch (Exception e){
+                e.printStackTrace();
             }
         }
     }
@@ -432,6 +436,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
             try {
                 oS.write(buffer);
             }catch (Exception e){
+                e.printStackTrace();
             }
         }
     }
@@ -442,6 +447,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
             try {
                 oS.write(buffer);
             }catch (Exception e){
+                e.printStackTrace();
             }
         }
     }
@@ -452,13 +458,14 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
             try{
                 oS.write(buffer);
             }catch(Exception e){
-
+                e.printStackTrace();
             }
         }
     }
 
     public void vArduino(View v){
         bigO = ((ToggleButton) v).isChecked();
+        Log.i("toggle button    ", bigO?"v checked":"v unchecked");
     }
 
     public void sendAndReceive(View v){
@@ -498,22 +505,21 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         }
     }
 
-
-    //SENDING COMMANDS DIRECTLY TO MACHINERONIS
-    public void moveForwards(View v){
-        byte[] buffer = {(byte)4,(byte)2};
-    }
-
     public void bVuforia(View v){
-        VParams = new VuforiaParameters();
-        VParams.setVuforiaLicenseKey(
-                "ATFMRrb/////AAAAGd0LzE71kkPjnoWoigFinSJp/L4eGD/p4zlkw3hvVdhzoBV4onBi+nxzNEWkwxwc6pc" +
-                        "rRfNsnn62e67HaHM7OaAllEOmreJBAd1WzwI23lN0lGRcPec5ZQEyPIItZs+rI1nODhoPLAPLwsY6GUYw33" +
-                        "pyAQg79ZDabU27EzC8aUM3IsFyB0J/gklWtitN51sRIeNTiiL1NV1O8fpHxSdVqtSJ3WyLb5rv/2kutb/Rn" +
-                        "tJD/dKXKE0T7l+ipW91d4b7u92eNZegfMzM79ooF3pmuUR1vxOn6N71zGWrnCFXsRVTnwgVc0QXemUJyTsd" +
-                        "yc2+7cgHTD4Fop2EPwPTyzen4gqUtaOuo018L9IOpx1v/2MC");
-        vClass = new VuforiaClass(this, VParams);
-        vClass.initAr(this);
+        if(!initted) {
+            initted = true;
+            VParams = new VuforiaParameters();
+            VParams.setVuforiaLicenseKey(
+                    "ATFMRrb/////AAAAGd0LzE71kkPjnoWoigFinSJp/L4eGD/p4zlkw3hvVdhzoBV4onBi+nxzNEWkwxwc6pc" +
+                            "rRfNsnn62e67HaHM7OaAllEOmreJBAd1WzwI23lN0lGRcPec5ZQEyPIItZs+rI1nODhoPLAPLwsY6GUYw33" +
+                            "pyAQg79ZDabU27EzC8aUM3IsFyB0J/gklWtitN51sRIeNTiiL1NV1O8fpHxSdVqtSJ3WyLb5rv/2kutb/Rn" +
+                            "tJD/dKXKE0T7l+ipW91d4b7u92eNZegfMzM79ooF3pmuUR1vxOn6N71zGWrnCFXsRVTnwgVc0QXemUJyTsd" +
+                            "yc2+7cgHTD4Fop2EPwPTyzen4gqUtaOuo018L9IOpx1v/2MC");
+            vClass = new VuforiaClass(this, VParams);
+            vClass.initAr(this);
+        }else{
+            Log.i("wassup g ur dumb   ", "ya already initted it ya bastard");
+        }
     }
 
     public void sendCircle(View v) {
@@ -525,15 +531,16 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
         if (oS != null) {
             try {
-                T.setText("Sending message to arduino");
+//                T.setText("Sending message to arduino");
                 oS.write(buffer);
             } catch (IOException e) {
-                T.setText("Wasn't able to send text to arduino");
+//                T.setText("Wasn't able to send text to arduino");
                 Log.e("Android Accessory", "write failed", e);
             }
-        } else {
-            T.setText("moutput is null");
-        }
+        } //else {
+
+//            T.setText("moutput is null");
+       // }
 
 //        if(buttonLED.isChecked())
 //            buffer[0]=(byte)0; // button says on, light is off
@@ -595,6 +602,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         permissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
 
         if(usbManager == null) usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        if(usbManager == null) return;
         if(usbManager.getAccessoryList()==null){
             Toast.makeText(context, "Accessory null from BeginUSB", Toast.LENGTH_SHORT).show();
             return;
@@ -672,23 +680,25 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 //        }
 //    }
 
-    public void setIsWifiP2pEnabled(Boolean value)
-    {
-        isWifiP2pEnabled = value;
-    }
 
-    public boolean getIsWifiP2pEnabled(){
-        return isWifiP2pEnabled;
-    }
-    public void resetData(){
 
-    }
+    //Not done yet
+//    public void setIsWifiP2pEnabled(Boolean value)
+//    {
+//        isWifiP2pEnabled = value;
+//    }
+//
+//    public boolean getIsWifiP2pEnabled(){
+//        return isWifiP2pEnabled;
+//    }
+//    public void resetData(){
+//
+//    }
 
     @Override
     public boolean initTrackers() {
         boolean toReturn = true;
         TrackerManager manager = TrackerManager.getInstance();
-        if(manager == null) Log.i("inittrackres", "trackermanager is null");
         Tracker tracker = manager.initTracker(ObjectTracker.getClassType());
         if(tracker == null) Log.i("inittrackres", "can't init tracker");
         if(tracker == null) toReturn = false;
@@ -707,7 +717,6 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
     @Override
     public boolean startTrackers() {
-        boolean onReturn = true;
         Tracker objectTracker = TrackerManager.getInstance().getTracker(ObjectTracker.getClassType());
 
         if(objectTracker!= null) objectTracker.start();
@@ -753,6 +762,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     @Override
     public void onVuforiaUpdate(State state) {
         this.state = state;
+        Log.i("onVupdate        ", " wassup g i am a homie");
 //        TextView T = (TextView) findViewById(R.id.TextView);
 //        T.setTextSize(15);
 //        String turtleman = String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
@@ -780,6 +790,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
                             Log.i("onVuforiaUpdate   ", "we be going left");
                             oS.write(new byte[]{(byte)10,(byte)3});
                         }else{
+                            Log.i("onVuforiaUpdate   ", "we stopped my dued");
                             oS.write(new byte[]{(byte)10,(byte) 7});
                             //yeah we stop my dude
                         }
@@ -800,7 +811,14 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     public void onInitARDone() {
         Log.i("onInitARDone", "we done my dude");
         //I CAN ADD STUFF FROM VUFORIAACTIVITY IF WE WANT AN OVERLAY
+
+
+
         vClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
+
+
+
+
     }
 
     public Boolean getExtendedTracking(){
@@ -817,20 +835,19 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         Matrix44F matrix44 = com.vuforia.Tool.convert2GLMatrix(matrix34);
         float[] newRes = new float[16];
         Matrix.multiplyMM(newRes
-                ,0, back, 0 , matrix44.getData(),0);
+                ,0, front, 0 , matrix44.getData(),0);
         float[] edit = {newRes[3],newRes[7],newRes[11],newRes[15]};
-        float[] translation = {edit[0]/edit[3],edit[1]/edit[3],edit[2]/edit[3]};
-        return translation;
+        return new float[] {edit[0]/edit[3],edit[1]/edit[3],edit[2]/edit[3]};
     }
 
 
 
-        float[] back = {
-                0,-1,0,0,
-                -1,0,0,0,
-                0,0,-1,0,
-                0,0,0,1
-        };
+//        float[] back = {
+//                0,-1,0,0,
+//                -1,0,0,0,
+//                0,0,-1,0,
+//                0,0,0,1
+//        };
 
         float[] front = {
                 0,1,0,0
@@ -875,43 +892,44 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
             return values;
         }
 
-        public double[] updateVector(double[] values){
+        private void updateVector(double[] values){
             this.values = values;
             x = values[0];
             y = values[1];
             z = values[2];
-            return values;
         }
     }
 
-    public class vuforiaSender implements Runnable{
+    //This doesn't work and is unnecessary
 
-        Vector vVector;
-        FileOutputStream outputStream;
-
-        public vuforiaSender(Vector vector, FileOutputStream oS){
-            outputStream = oS;
-            vVector = vector;
-        }
-
-        @Override
-        public void run() {
-            while(bigO) {
-                vVector = vector;
-                if (vVector.getValues()[0] == 999 && vVector.getValues()[1] == 999 && vVector.getValues()[2] == 999) {
-                    break;
-                } else if (vVector.getX() > 1) {
-                    Log.i("vuforiaSender Thread  ", "we are going right my dude");
-                    //go right my man
-                } else if (vVector.getX() < -1) {
-                    Log.i("vuforiaSender Thread ", " we are going left my dude");
-                    //go left my man
-                }
-                Log.i("vuforiaSender Thread", "we are cool");
-            }
-        }
-
-
-    }
+//    public class vuforiaSender implements Runnable{
+//
+//        Vector vVector;
+//        FileOutputStream outputStream;
+//
+//        public vuforiaSender(Vector vector, FileOutputStream oS){
+//            outputStream = oS;
+//            vVector = vector;
+//        }
+//
+//        @Override
+//        public void run() {
+//            while(bigO) {
+//                vVector = vector;
+//                if (vVector.getValues()[0] == 999 && vVector.getValues()[1] == 999 && vVector.getValues()[2] == 999) {
+//                    break;
+//                } else if (vVector.getX() > 1) {
+//                    Log.i("vuforiaSender Thread  ", "we are going right my dude");
+//                    //go right my man
+//                } else if (vVector.getX() < -1) {
+//                    Log.i("vuforiaSender Thread ", " we are going left my dude");
+//                    //go left my man
+//                }
+//                Log.i("vuforiaSender Thread", "we are cool");
+//            }
+//        }
+//
+//
+//    }
 
 }

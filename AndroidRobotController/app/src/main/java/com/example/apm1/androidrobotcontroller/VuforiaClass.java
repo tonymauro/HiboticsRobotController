@@ -174,7 +174,8 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
         Log.i("VuforiaCLass", "startCameraAndTrackers");
         cameraType = camera;
         CameraDevice cam = CameraDevice.getInstance();
-        if(!cam.init());
+
+        if(!cam.init(camera));
         if(!cam.selectVideoMode(CameraDevice.MODE.MODE_DEFAULT));
         if(!cam.start());
         vuforiaAct.startTrackers();
