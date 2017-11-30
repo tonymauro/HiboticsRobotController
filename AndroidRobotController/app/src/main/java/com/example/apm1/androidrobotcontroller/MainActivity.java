@@ -263,8 +263,14 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
     @Override
     public void onPause() {
+        if(oS!= null){
+            try{
+                oS.write(new byte[]{(byte)10, (byte) 9});
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
         super.onPause();
-
         //unregisterReceiver(usbReceiver);
         //unregisterReceiver(wifiReceiver);
         //closeAccessory();
@@ -762,7 +768,6 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     @Override
     public void onVuforiaUpdate(State state) {
         this.state = state;
-        Log.i("onVupdate        ", " wassup g i am a homie");
 //        TextView T = (TextView) findViewById(R.id.TextView);
 //        T.setTextSize(15);
 //        String turtleman = String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
@@ -783,16 +788,20 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
                 try {
                     if (oS != null) {
                         if (vector.x > 1) {
-                            Log.i("onVuforiaUpdate   ", "we be going right");
+                            Log.i("onVuforiaUpdate   ", "Right command");
                             oS.write(new byte[]{(byte)10,(byte)2});
-                        } else if (vector.x < -1) {
+                        } else if (vector.x < -1 && vector.x>-50) {
                             // go left my dude
-                            Log.i("onVuforiaUpdate   ", "we be going left");
+                            Log.i("onVuforiaUpdate   ", "Left command");
                             oS.write(new byte[]{(byte)10,(byte)3});
                         }else{
-                            Log.i("onVuforiaUpdate   ", "we stopped my dued");
+                            Log.i("onVuforiaUpdate   ","Stop command");
                             oS.write(new byte[]{(byte)10,(byte) 7});
                             //yeah we stop my dude
+                        }
+                        if(vector.x == -999 && vector.y == -999 && vector.z == -999){
+                            Log.i("onVuforiaUpdate   ", "None found");
+                            oS.write(new byte[]{(byte) 10, (byte) 9});
                         }
                     }
                 }catch (Exception e){
@@ -801,7 +810,17 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
                 //here we do the stuff
             }
         }else{
+            Log.i("onVuforiaUpdate","vuforia updated without finding");
             vector.updateVector(new double[]{-999,-999,-999});
+            if(bigO){
+                try{
+                    if(oS!= null){
+                        oS.write(new byte[]{(byte) 10,(byte) 9});
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
         }
 
 //        this.state = state;
@@ -825,20 +844,20 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         return extendedTracking;
     }
 
-    public void setExtendedTracking(Boolean et){
-        extendedTracking = et;
-    }
+//    public void setExtendedTracking(Boolean et){
+//        extendedTracking = et;
+//    }
 
-    public float[] translation(float[] pose){
-        Matrix34F matrix34 = new Matrix34F();
-        matrix34.setData(pose);
-        Matrix44F matrix44 = com.vuforia.Tool.convert2GLMatrix(matrix34);
-        float[] newRes = new float[16];
-        Matrix.multiplyMM(newRes
-                ,0, front, 0 , matrix44.getData(),0);
-        float[] edit = {newRes[3],newRes[7],newRes[11],newRes[15]};
-        return new float[] {edit[0]/edit[3],edit[1]/edit[3],edit[2]/edit[3]};
-    }
+//    public float[] translation(float[] pose){
+//        Matrix34F matrix34 = new Matrix34F();
+//        matrix34.setData(pose);
+//        Matrix44F matrix44 = com.vuforia.Tool.convert2GLMatrix(matrix34);
+//        float[] newRes = new float[16];
+//        Matrix.multiplyMM(newRes
+//                ,0, front, 0 , matrix44.getData(),0);
+//        float[] edit = {newRes[3],newRes[7],newRes[11],newRes[15]};
+//        return new float[] {edit[0]/edit[3],edit[1]/edit[3],edit[2]/edit[3]};
+//    }
 
 
 
@@ -849,12 +868,12 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 //                0,0,0,1
 //        };
 
-        float[] front = {
-                0,1,0,0
-                -1,0,0,0,
-                0,0,1,0,
-                0,0,0,1
-        };
+//        float[] front = {
+//                0,1,0,0
+//                -1,0,0,0,
+//                0,0,1,0,
+//                0,0,0,1
+//        };
 
 
     public class Vector{
@@ -867,7 +886,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         public Vector(double x, double y, double z){
             this.x = x;
             this.y = y;
-            this.z = y;
+            this.z = z;
         }
 
         public Vector(double[] values){
