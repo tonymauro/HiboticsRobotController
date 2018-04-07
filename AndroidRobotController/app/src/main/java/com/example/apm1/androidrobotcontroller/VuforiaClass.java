@@ -34,8 +34,8 @@ public class VuforiaClass implements Vuforia.UpdateCallbackInterface{
 
     public final Object lifecycleLock = new Object();
 
-    public VuforiaClass(VuforiaActInterface vuforiaAct, VuforiaParameters params){
-        Log.i("VUforiaClass", "before initializing");
+    protected VuforiaClass(VuforiaActInterface vuforiaAct, VuforiaParameters params){
+        Log.i("VuforiaClass", "before initializing");
         this.vuforiaAct = vuforiaAct;
         VParams = params;
    //     tManager = TrackerManager.getInstance();

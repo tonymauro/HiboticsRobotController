@@ -176,4 +176,43 @@
         android:onClick="vArduino"
         tools:text="VuforiaArduino" />
 
+    <Button
+        android:id="@+id/Left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/FWard"
+        android:onClick="Left"
+        android:text="Left" />
+
+    <Button
+        android:id="@+id/Right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/Left"
+        android:onClick="Right"
+        android:text="Right" />
+
+    <ToggleButton
+        android:id="@+id/togglebutton2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/ClearDisplay"
+        android:checked="false"
+        android:text="ToggleButton"
+        android:textOff="Turn On S"
+        android:textOn="Turn Off S"
+        android:onClick="vServo"/>
+
+    <ToggleButton
+        android:id="@+id/Motor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/togglebutton2"
+        android:layout_toEndOf="@+id/button"
+        android:textOff="Motor On"
+        android:textOn="Motor Off"
+        android:onClick="vMotor"/>
+
 </RelativeLayout>

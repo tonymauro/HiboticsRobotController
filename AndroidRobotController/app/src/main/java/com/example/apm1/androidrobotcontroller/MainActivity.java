@@ -37,10 +37,16 @@ import com.vuforia.Trackable;
 import com.vuforia.Tracker;
 import com.vuforia.TrackerManager;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+
+import static java.lang.Math.abs;
 
 public class MainActivity extends AppCompatActivity implements VuforiaActInterface {
 
@@ -75,11 +81,18 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
     boolean bigO = false;
 
+    boolean servo = false;
+    boolean motor = false;
 //    boolean wifiP2PEnabled;
 
     DataSet dataSet;
     State state;
     VuforiaClass vClass;
+
+    boolean first = true;
+    int Camera = -1;
+
+    int countLoss = 0;
 
     private static final String ACTION_USB_PERMISSION = "com.google.android.DemoKit.action.USB_PERMISSION";
 
@@ -96,7 +109,13 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                         megaADK = accessory;
                         setUp(megaADK);
+                        TextView t = (TextView) findViewById(R.id.TextView);
+                        t.setTextSize(15);
+                        t.setText("Action USB Permission");
                     } else {
+                        TextView t = (TextView) findViewById(R.id.TextView);
+                        t.setTextSize(15);
+                        t.setText("Action USB Permission Denied");
                         Log.d("MEGA ADK ", "Permission denied" + accessory);
                     }
                     rP = false;
@@ -105,7 +124,9 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
                 UsbAccessory accessory = usbManager.getAccessoryList()[0];
                 if(accessory == null) Log.d("Detached", "accessory no longer findable");
-
+                Toast.makeText(context,"Accessory is detached", Toast.LENGTH_SHORT);
+                oS = null;
+                iS = null;
 //              if (accessory != null && accessory.equals(megaADK)) {
 //                    closeAccessory();
 //              }
@@ -114,6 +135,9 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
                 if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
                     megaADK = accessory;
                     setUp(megaADK);
+                    TextView t = (TextView) findViewById(R.id.TextView);
+                    t.setTextSize(15);
+                    t.setText("Action USB Attached");
                 } else {
                     Log.d("MEGA ADK ", "Permission denied" + accessory);
                 }
@@ -184,6 +208,8 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         usbFilter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
         usbFilter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
 
+        beginMqtt();
+
         context = getApplicationContext();
         glSurfaceView = new GLSurfaceView(context);
 //        registerReceiver(usbReceiver, usbFilter);
@@ -237,6 +263,10 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
         }
         //There sohuld only be 1 USB accessory which would be the Mega
         if(usbManager==null){
+            if(first){
+                first = false;
+                return;
+            }
             Toast.makeText(context,"usbManager is null", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -247,6 +277,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
             } else {
                 synchronized (usbReceiver) {
                     if (!rP) {
+                        Toast.makeText(context, "requesting permission", Toast.LENGTH_SHORT).show();
                         usbManager.requestPermission(accessory, permissionIntent);
                         rP = true;
                     }
@@ -437,7 +468,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     }
 
     public void Forward(View v) {
-        byte[] buffer = {(byte)164, (byte)5};
+        byte[] buffer = {(byte)125,(byte) 10, (byte)5};
         if(oS!= null){
             try {
                 oS.write(buffer);
@@ -448,7 +479,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     }
 
     public void Backward(View v) {
-        byte[] buffer = {(byte)164, (byte)6};
+        byte[] buffer = {(byte) 125, (byte)10, (byte)6};
         if(oS!= null){
             try {
                 oS.write(buffer);
@@ -459,7 +490,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     }
 
     public void Stop(View v) {
-        byte[] buffer = {(byte) 164, (byte) 7};
+        byte[] buffer = {(byte) 125, (byte) 10, (byte) 7};
         if(oS != null){
             try{
                 oS.write(buffer);
@@ -472,6 +503,38 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     public void vArduino(View v){
         bigO = ((ToggleButton) v).isChecked();
         Log.i("toggle button    ", bigO?"v checked":"v unchecked");
+    }
+
+    public void vServo(View v){
+        servo = ((ToggleButton) v).isChecked();
+        Log.i("servo button    ", servo?"checked":"unchecked");
+    }
+
+    public void vMotor(View v){
+        motor = ((ToggleButton) v).isChecked();
+        Log.i("motor button    ", motor?"checked":"unchecked");
+    }
+
+    public void Left(View v){
+        byte[] buffer = {(byte)125,(byte) 27, (byte)5};
+        if(oS!= null){
+            try {
+                oS.write(buffer);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void Right(View v){
+        byte[] buffer = {(byte)125,(byte) 26, (byte)5};
+        if(oS!= null){
+            try {
+                oS.write(buffer);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
     public void sendAndReceive(View v){
@@ -498,11 +561,11 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
          //       byte[] bytes =
            //     if(iS.read() == 1) Toast.makeText(this,"Second byte received",Toast.LENGTH_LONG).show();
 
-                int numRead = iS.read(sForBytes);
-                if(numRead>0){
-                    Toast.makeText(this,sForBytes[0] + "   " + sForBytes[1] + "   " + sForBytes[2] + "   "
-                    + sForBytes[3], Toast.LENGTH_SHORT).show();
-                }
+//                int numRead = iS.read(sForBytes);
+//                if(numRead>0){
+//                    Toast.makeText(this,sForBytes[0] + "   " + sForBytes[1] + "   " + sForBytes[2] + "   "
+//                    + sForBytes[3], Toast.LENGTH_SHORT).show();
+//                }
 
 
             }catch (IOException e){
@@ -513,6 +576,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
     public void bVuforia(View v){
         if(!initted) {
+            Toast.makeText(context,"Initting for the first time", Toast.LENGTH_SHORT).show();
             initted = true;
             VParams = new VuforiaParameters();
             VParams.setVuforiaLicenseKey(
@@ -524,12 +588,12 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
             vClass = new VuforiaClass(this, VParams);
             vClass.initAr(this);
         }else{
-            Log.i("wassup g ur dumb   ", "ya already initted it ya bastard");
+            Log.i("bVuforia  ", "Vuforia initialized");
         }
     }
 
     public void sendCircle(View v) {
-        byte[] buffer = {(byte)1,(byte)0};
+        byte[] buffer = {(byte)10,(byte)-90};
 
         // byte[] message = {(byte) 1};
         TextView T = (TextView) findViewById(R.id.TextView);
@@ -537,7 +601,7 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 
         if (oS != null) {
             try {
-//                T.setText("Sending message to arduino");
+                T.setText("Sending message to arduino");
                 oS.write(buffer);
             } catch (IOException e) {
 //                T.setText("Wasn't able to send text to arduino");
@@ -768,75 +832,208 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
     @Override
     public void onVuforiaUpdate(State state) {
         this.state = state;
-//        TextView T = (TextView) findViewById(R.id.TextView);
-//        T.setTextSize(15);
-//        String turtleman = String.valueOf(state.getTrackableResult(0).getPose().getData()[3]*100/2.54) + "    "+
-//                String.valueOf(state.getTrackableResult(0).getPose().getData()[7]*100/2.54)+ "         "+
-//                String.valueOf(state.getTrackableResult(0).getPose().getData()[11]*100/2.54);
-//        T.setText(turtleman);
-        if(state.getNumTrackableResults()>0){
-            Log.i("onvupdate","at least 1 trackable found");
+
+        //from the back camera the numbesr are as expected
+        //From the front camera, the right is negative and left is positiev
+        //and down is positive and up is negative
+
+        if(state.getNumTrackableResults()>0) {
+            Log.i("onVuforiaUpdate", "at least 1 trackable found");
+            //    Toast.makeText(context, "found a trackable my dude",Toast.LENGTH_SHORT).show();
             float[] pose = state.getTrackableResult(0).getPose().getData();
-            double x = pose[7]*100/2.54;
-            double y = pose[3]*100/2.54;
-            double z = pose[11]*100/2.54;
-            Log.i("x",String.valueOf(x));
-            Log.i("y",String.valueOf(y));
-            Log.i("z",String.valueOf(z));
-            vector.updateVector(new double[]{x,y,z});
-            if(bigO){
-                try {
-                    if (oS != null) {
+            double x = pose[7] * 100 / 2.54;
+            double y = pose[3] * 100 / 2.54;
+            double z = pose[11] * 100 / 2.54;
+            if (Camera == CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_FRONT) {
+                x = -x;
+                y = -y;
+            } else if (Camera == CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK) {
+
+            } else {
+                //houston we have a problem
+            }
+            Log.i("x", String.valueOf(x));
+            Log.i("y", String.valueOf(y));
+            Log.i("z", String.valueOf(z));
+            vector.updateVector(new double[]{x, y, z});
+
+            if (motor) {
+                boolean mm = Math.abs(x / z) >= 1;
+                if (servo && !mm) {
+                    try {
+                        oS.write(new byte[]{(byte) 10, (byte) 7});
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    double xz;
+                    xz = x / z;
+                    xz = Math.atan(xz) * 180 / Math.PI;
+
+                    int toreturn = (int) xz / 3;
+                    //Moves a maximum of 30 degrees to a side, keeps it smooth
+                    //Doesn't move as fast, but moves smoothly
+
+                    try {
+                        if (oS != null) {
+                            TextView T = (TextView) findViewById(R.id.TextView);
+                            T.setTextSize(15);
+                            T.setText("before sending servo Message");
+                            if (xz >= 0) {
+                                oS.write(new byte[]{(byte) 125, (byte) 16, (byte) toreturn});
+                            } else {
+                                oS.write(new byte[]{(byte) 125, (byte) 17, (byte) (-toreturn)});
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    try {
                         if (vector.x > 1) {
+                            countLoss = 0;
                             Log.i("onVuforiaUpdate   ", "Right command");
-                            oS.write(new byte[]{(byte)10,(byte)2});
-                        } else if (vector.x < -1 && vector.x>-50) {
+                            oS.write(new byte[]{(byte) 125, (byte) 10, (byte) 5});
+                        } else if (vector.x < -1 && vector.x > -999) {
                             // go left my dude
+                            countLoss = 0;
                             Log.i("onVuforiaUpdate   ", "Left command");
-                            oS.write(new byte[]{(byte)10,(byte)3});
-                        }else{
-                            Log.i("onVuforiaUpdate   ","Stop command");
-                            oS.write(new byte[]{(byte)10,(byte) 7});
+                            oS.write(new byte[]{(byte) 125, (byte) 10, (byte) 6});
+                        } else {
+//                            countLoss = 0;
+                            countLoss++;
+                            Log.i("onVuforiaUpdate   ", "Stop command");
+                            oS.write(new byte[]{(byte) 125, (byte) 10, (byte) 7});
                             //yeah we stop my dude
                         }
-                        if(vector.x == -999 && vector.y == -999 && vector.z == -999){
+                        if (vector.x == -999 && vector.y == -999 && vector.z == -999) {
+                            countLoss++;
+                            if(countLoss > 7){
+                                oS.write(new byte[]{(byte) 125, (byte) 10., (byte) 7});
+                            }
                             Log.i("onVuforiaUpdate   ", "None found");
-                            oS.write(new byte[]{(byte) 10, (byte) 9});
+//                            oS.write(new byte[]{(byte) 10, (byte) 9});
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                }catch (Exception e){
-                    e.printStackTrace();
                 }
-                //here we do the stuff
+            }else if (servo) {
+                double xz;
+
+                if (z != 0.0) {
+                    xz = x / z;
+                    xz = Math.atan(xz) * 180 / Math.PI;
+
+                    int toreturn = (int) xz / 3;
+                    //Moves a maximum of 30 degrees to a side, keeps it smooth
+                    //Doesn't move as fast, but moves smoothly
+
+                    try {
+                        if (oS != null) {
+                            TextView T = (TextView) findViewById(R.id.TextView);
+                            T.setTextSize(15);
+                            T.setText("before sending servo Message");
+                            if (xz >= 0) {
+                                oS.write(new byte[]{(byte) 125, (byte) 16, (byte) toreturn});
+                            } else {
+                                oS.write(new byte[]{(byte) 125, (byte) 17, (byte) (-toreturn)});
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    Log.i("Pan degrees horizontal", "     " + String.valueOf(toreturn));
+
+                } else {
+                    TextView T = (TextView) findViewById(R.id.TextView);
+                    T.setTextSize(15);
+                    T.setText("z == 0?");
+                }
             }
         }else{
-            Log.i("onVuforiaUpdate","vuforia updated without finding");
-            vector.updateVector(new double[]{-999,-999,-999});
-            if(bigO){
-                try{
-                    if(oS!= null){
-                        oS.write(new byte[]{(byte) 10,(byte) 9});
-                    }
-                }catch(Exception e){
+            countLoss++;
+            if(countLoss>7){
+                try {
+                    oS.write(new byte[]{(byte) 125, (byte) 10, (byte) 7});
+                }catch(IOException e){
                     e.printStackTrace();
                 }
             }
         }
+                //16 will be key to panning left and right
+
+                //xz will be the servo that is turning in the x and z axis
+
+//            if(z!=0){
+//                yz = y/z;
+//                yz = Math.atan(yz)*180/Math.PI;
+//
+//                int toreturn = (int) yz;
+//                try{
+//                    if(servo && oS!=null) {
+//                        Toast.makeText(context,"SEnding a servo message",Toast.LENGTH_SHORT).show();
+//                        if(yz>=0){
+//                           oS.write(new byte[]{(byte) 125, (byte) 18, (byte) toreturn});
+//                        }else{
+//                            oS.write(new byte[]{(byte) 125, (byte) 19, (byte) (-toreturn)});
+//                        }
+//                    }
+//                }catch(Exception e){
+//                    e.printStackTrace();
+//                }
+//
+//                Log.i("Pan degrees vertical", "     " + String.valueOf(toreturn));
+//                //y should be negative while z should be positive, but it depends
+//            }
+            }
+//            if(motor){
+//                try {
+//                    if (oS != null) {
+//                        if (vector.x > 1) {
+//                            Log.i("onVuforiaUpdate   ", "Right command");
+//                            oS.write(new byte[]{(byte)10,(byte)2});
+//                        } else if (vector.x < -1 && vector.x>-50) {
+//                            // go left my dude
+//                            Log.i("onVuforiaUpdate   ", "Left command");
+//                            oS.write(new byte[]{(byte)10,(byte)3});
+//                        }else{
+//                            Log.i("onVuforiaUpdate   ","Stop command");
+//                            oS.write(new byte[]{(byte)10,(byte) 7});
+//                            //yeah we stop my dude
+//                        }
+//                        if(vector.x == -999 && vector.y == -999 && vector.z == -999){
+//                            Log.i("onVuforiaUpdate   ", "None found");
+//                            oS.write(new byte[]{(byte) 10, (byte) 9});
+//                        }
+//                    }
+//                }catch (Exception e){
+//                    e.printStackTrace();
+//                }
+//                //here we do the stuff
+//            }
+//        }else{
+//            Log.i("onVuforiaUpdate","vuforia updated without finding");
+//            vector.updateVector(new double[]{-999,-999,-999});
+//            if(bigO){
+//                try{
+//                    if(oS!= null){
+//                        oS.write(new byte[]{(byte) 10,(byte) 9});
+//                    }
+//                }catch(Exception e){
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
 
 //        this.state = state;
-    }
 
     @Override
     public void onInitARDone() {
+
         Log.i("onInitARDone", "we done my dude");
         //I CAN ADD STUFF FROM VUFORIAACTIVITY IF WE WANT AN OVERLAY
-
-
-
-        vClass.startAR(CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK);
-
-
-
+        Camera = CameraDevice.CAMERA_DIRECTION.CAMERA_DIRECTION_BACK;
+        vClass.startAR(Camera);
 
     }
 
@@ -950,5 +1147,30 @@ public class MainActivity extends AppCompatActivity implements VuforiaActInterfa
 //
 //
 //    }
+
+    private void beginMqtt(){
+        MqttHelper helper = new MqttHelper(getApplicationContext());
+        helper.setCallback(new MqttCallbackExtended() {
+            @Override
+            public void connectComplete(boolean reconnect, String serverURI) {
+
+            }
+
+            @Override
+            public void connectionLost(Throwable cause) {
+
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+                Toast.makeText(context, message.toString(),Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+
+            }
+        });
+    }
 
 }
